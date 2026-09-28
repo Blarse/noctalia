@@ -334,6 +334,8 @@ If you changed your PAM stack for fingerprint, security key, or other authentica
 
 After a successful PAM unlock, Noctalia asks the same PAM stack to refresh existing credentials, such as Kerberos tickets or PAM-integrated GPG and keyring credentials.
 
+If the log says `noctalia-pam-helper not found`, the installation is incomplete: the helper must be installed next to the `noctalia` binary or in `<libexecdir>/noctalia/`.
+
 </FaqItem>
 
 <FaqItem question="Does the lock screen engage before suspend?">
