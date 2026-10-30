@@ -544,11 +544,11 @@ namespace {
       addCandidate(std::move(candidate), key);
     }
 
+    // Assignments are authoritative when the backend reports any: a live toplevel without a matching
+    // assignment is the same window under an unmapped identity (sway/scroll key by con id, live by wlr handle).
+    const bool assignmentsAuthoritative = membershipFilterApplied || !assignmentByIdentity.empty();
     for (const auto& [key, info] : liveToplevelByIdentity) {
-      if (seenKeys.contains(key)) {
-        continue;
-      }
-      if (membershipFilterApplied) {
+      if (assignmentsAuthoritative || seenKeys.contains(key)) {
         continue;
       }
       WindowSwitcherCandidate candidate;
