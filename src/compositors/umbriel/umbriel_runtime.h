@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <cstdint>
 #include <nlohmann/json.hpp>
 #include <optional>
 #include <poll.h>
@@ -11,6 +12,29 @@
 namespace compositors::umbriel {
 
   class UmbrielEventHandler;
+
+  // The reply to one request line, read from a fresh connection.
+  struct IpcReply {
+    enum class Status : std::uint8_t {
+      Unavailable,
+      WriteFailed,
+      ReadFailed,
+      NoResponse,
+      InvalidJson,
+      Replied,
+    };
+
+    Status status = Status::Unavailable;
+    std::optional<nlohmann::json> json;
+  };
+
+  // UMBRIEL_SOCKET, otherwise $XDG_RUNTIME_DIR/umbriel-$WAYLAND_DISPLAY.sock when that socket exists; empty when
+  // neither applies.
+  [[nodiscard]] std::string findSocketPath();
+  // Sends `payload` (one newline-terminated request) and reads one reply line. Blocking and stateless, so it may run
+  // on any thread.
+  [[nodiscard]] IpcReply
+  exchange(const std::string& socketPath, std::string_view payload, std::chrono::milliseconds timeout);
 
   // Owns the Umbriel IPC: stateless one-shot requests (fresh socket per call)
   // plus a single persistent event-stream socket whose messages are fanned out
@@ -42,9 +66,6 @@ namespace compositors::umbriel {
     void dispatchPoll(short revents);
 
   private:
-    struct IpcReply;
-
-    [[nodiscard]] IpcReply request(std::string_view payload) const;
     // Sends one JSON request; the reply when it is `ok`, otherwise nullopt.
     [[nodiscard]] std::optional<nlohmann::json> send(const nlohmann::json& request) const;
     void ensureResolved() const;
